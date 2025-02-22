@@ -26,15 +26,19 @@ dbWriteTable(conn, "MATCH", MATCH_data, overwrite = TRUE, row.names = FALSE)
 dbWriteTable(conn, "COUNTRY", COUNTRY_data, overwrite = TRUE, row.names = FALSE)
 dbWriteTable(conn, "TEAM_ATTRIBUTES", TEAM_ATTRIBUTES_data, overwrite = TRUE, row.names = FALSE)
 dbListTables(conn)
+head(MATCH_data)
 
-query <- "SELECT p.player_name, pa.aggression
-          FROM PLAYER_ATTRIBUTES pa
-          JOIN PLAYER p ON p.player_api_id = pa.player_api_id
-          ORDER BY pa.aggression DESC
-          LIMIT 11;"
+#query <- "SELECT p.player_name, pa.aggression
+          #FROM PLAYER_ATTRIBUTES pa
+          #JOIN PLAYER p ON p.player_api_id = pa.player_api_id
+          #ORDER BY pa.aggression DESC
+          #LIMIT 11;"
 
-aggressive_players <- dbGetQuery(conn, query)
-print(aggressive_players)
+#aggressive_players <- dbGetQuery(conn, query)
+#print(aggressive_players)
+query <- "WITH AggressionByTeam AS {
+  SELECT MATCH.home_team_api_id
+}"
 
 
 
