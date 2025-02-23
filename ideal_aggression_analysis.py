@@ -27,7 +27,7 @@ weights_home_test = np.array([random.uniform(1, 5) for i in range(len(X_home_tea
 weights_away_test = np.array([random.uniform(1, 5) for i in range(len(X_away_team))])
 
 
-def weighted_kmeans(X, k, weights, max_iter=100, RNG=None):
+def weighted_kmeans(X, k, weights, max_iter=800, RNG=None):
     if RNG is not None:
         np.random.seed(RNG)
 
@@ -64,4 +64,5 @@ k_test = 1
 
 labels, centroids = weighted_kmeans(X_home_team, k_test, weights_home_test)
 
-print(centroids)
+for i in centroids:
+    print("average expected aggression to win this team:",i[1])
