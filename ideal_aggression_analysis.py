@@ -1,21 +1,31 @@
 import pandas as pd
 import numpy as np
 import random
+import matplotlib.pyplot as plt
 
 random.seed(10)
+team_id = 8203 # wait to be replaced by real data
 data = pd.read_csv("CLEANED1_european_soccer_dataset-MATCH.csv") # wait to be replaced by real data
-home_team=data['home_team_aggression']
-away_team=data['away_team_aggression']
-
-for i in range(len(combined_list)): #keep the data for matches that a specific team is losing
-    if data['home_team_goal']>data['away_team_goal']:
-        combined_list[i][0]=1
 
 
-combined_list = [[x , y] for x, y in zip(home_team, away_team)]
-X = np.array(combined_list)
-#weights = np.array(data["newColumn"])  wait to be replaced by real data
-weights_test=[random.uniform(1,5) for i in range(len(X))]
+#fake data
+data['home_team_aggression']=np.random.randint(20,100,len(data))
+data['away_team_aggression']=np.random.randint(30,100,len(data))
+
+plt.hist(data['home_team_aggression'], bins=30, color='blue')
+plt.show()
+
+#separate if the opponents loss in the home game or away game
+home_team = [[data['home_team_aggression'][i],data['away_team_aggression'][i]]for i in range(len(data)) if data['home_team_api_id'][i] == team_id and data['home_team_goal'][i]<data['away_team_goal'][i]]
+away_team = [[data['away_team_aggression'][i],data['home_team_aggression'][i]]for i in range(len(data)) if data['away_team_api_id'][i] == team_id and data['away_team_goal'][i]<data['home_team_goal'][i]]
+
+
+
+X_home_team = np.array(home_team)
+X_away_team = np.array(away_team)
+weights_home_test = np.array([random.uniform(1, 5) for i in range(len(X_home_team))])
+weights_away_test = np.array([random.uniform(1, 5) for i in range(len(X_away_team))])
+
 
 def weighted_kmeans(X, k, weights, max_iter=100, RNG=None):
     if RNG is not None:
@@ -50,19 +60,8 @@ def weighted_kmeans(X, k, weights, max_iter=100, RNG=None):
 
 
 
-X_test = np.array([[1.0, 2.0],
-                   [1.5, 1.8],
-                   [5.0, 8.0],
-                   [8.0, 8.0],
-                   [1.0, 0.6],
-                   [9.0, 11.0]])
+k_test = 1
 
+labels, centroids = weighted_kmeans(X_home_team, k_test, weights_home_test)
 
-weights_test = np.array([1, 1, 1, 1, 1, 1])
-
-
-k_test = 2
-
-labels, centroids = weighted_kmeans(X_test, k_test, weights_test)
-
-print(labels,centroids)
+print(centroids)
