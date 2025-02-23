@@ -16,15 +16,15 @@ plt.hist(data['home_team_aggression'], bins=30, color='blue')
 plt.show()
 
 #separate if the opponents loss in the home game or away game
-home_team = [[data['home_team_aggression'][i],data['away_team_aggression'][i]]for i in range(len(data)) if data['home_team_api_id'][i] == team_id and data['home_team_goal'][i]<data['away_team_goal'][i]]
-away_team = [[data['away_team_aggression'][i],data['home_team_aggression'][i]]for i in range(len(data)) if data['away_team_api_id'][i] == team_id and data['away_team_goal'][i]<data['home_team_goal'][i]]
+home_team_loss = [[data['home_team_aggression'][i],data['away_team_aggression'][i]]for i in range(len(data)) if data['home_team_api_id'][i] == team_id and data['home_team_goal'][i]<data['away_team_goal'][i]]
+away_team_loss = [[data['away_team_aggression'][i],data['home_team_aggression'][i]]for i in range(len(data)) if data['away_team_api_id'][i] == team_id and data['away_team_goal'][i]<data['home_team_goal'][i]]
+home_team_overall=[[data['home_team_aggression'][i],data['away_team_aggression'][i]]for i in range(len(data)) if data['home_team_api_id'][i] == team_id]
+away_team_overall=[[data['away_team_aggression'][i],data['home_team_aggression'][i]]for i in range(len(data)) if data['away_team_api_id'][i] == team_id]
 
-
-
-X_home_team = np.array(home_team)
-X_away_team = np.array(away_team)
-weights_home_test = np.array([random.uniform(1, 5) for i in range(len(X_home_team))])
-weights_away_test = np.array([random.uniform(1, 5) for i in range(len(X_away_team))])
+X_home_team_loss = np.array(home_team_loss)
+X_away_team_loss = np.array(away_team_loss)
+weights_home_test = np.array([random.uniform(1, 5) for i in range(len(X_home_team_loss))])
+weights_away_test = np.array([random.uniform(1, 5) for i in range(len(X_away_team_loss))])
 
 
 def weighted_kmeans(X, k, weights, max_iter=800, RNG=None):
@@ -62,10 +62,20 @@ def weighted_kmeans(X, k, weights, max_iter=800, RNG=None):
 
 k_test = 1
 
-labels, team_is_home_loss = weighted_kmeans(X_home_team, k_test, weights_home_test)
-labels, team_is_away_loss = weighted_kmeans(X_away_team, k_test, weights_away_test)
+labels, team_is_home_loss = weighted_kmeans(X_home_team_loss, k_test, weights_home_test)
+labels, team_is_away_loss = weighted_kmeans(X_away_team_loss, k_test, weights_away_test)
+labels, team_is_home_overall = weighted_kmeans(np.array(home_team_overall), k_test, np.array([1 for i in range(len(home_team_overall))]))
+labels, team_is_away_overall = weighted_kmeans(np.array(away_team_overall), k_test, np.array([1 for i in range(len(away_team_overall))]))
 for i in team_is_home_loss:
-    print("average expected aggression to win this team when playing away:",i[1])
+    print("ideal aggression to win this team when we are playing away:",i[1])
+    print("the difference between the ideal aggression of this team and the average expected aggression of the team when it's playing away:",team_is_home_overall[0,0]-i[0])
 for i in team_is_away_loss:
-    print("average expected aggression to win this tea when playing home:",i[1])
+    print("ideal aggression to win this team when we are playing home:",i[1])
+    print("the difference between the ideal aggression of this team and the average expected aggression of the team when it's playing home:",team_is_away_overall[0,0]-i[0])
+
+
+for i in team_is_home_overall:
+    print("average expected aggression of this team when it's playing home:",i[0])
+for i in team_is_away_overall:
+    print("average expected aggression of this team when it's playing away:",i[0])
 
