@@ -62,7 +62,10 @@ def weighted_kmeans(X, k, weights, max_iter=800, RNG=None):
 
 k_test = 1
 
-labels, centroids = weighted_kmeans(X_home_team, k_test, weights_home_test)
+labels, team_is_home_loss = weighted_kmeans(X_home_team, k_test, weights_home_test)
+labels, team_is_away_loss = weighted_kmeans(X_away_team, k_test, weights_away_test)
+for i in team_is_home_loss:
+    print("average expected aggression to win this team when playing away:",i[1])
+for i in team_is_away_loss:
+    print("average expected aggression to win this tea when playing home:",i[1])
 
-for i in centroids:
-    print("average expected aggression to win this team:",i[1])
