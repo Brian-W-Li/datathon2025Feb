@@ -7,12 +7,11 @@ playerAttributes_data = pd.read_csv("european_soccer_dataset-PLAYER_ATTRIBUTES.c
 playerAttributes_data["date"] = pd.to_datetime(playerAttributes_data["date"], errors="coerce") #playerAttributes date are comparable
 match_data["date"] = pd.to_datetime(match_data["date"], errors="coerce") #match data date is comparable
 
-playerAttributes_data = playerAttributes_data.rename(columns={"player_api_id": "player_id"}) #renamed column of playerAttributes_data to player_id
 #playerAttributes_data["aggression"] = playerAttributes_data["aggression"].fillna(-1) #do i edit this?
-print(playerAttributes_data.sort_values(by = ["aggression"]))
-playerAttributes_data = playerAttributes_data.sort_values(by=["player_id", "date"]).reset_index(drop = True) #sorts playerAttributes_data by player_id first then date
+#print(playerAttributes_data.sort_values(by = ["aggression"]))
+#playerAttributes_data = playerAttributes_data.sort_values(by=["player_id", "date"]).reset_index(drop = True) #sorts playerAttributes_data by player_id first then date
 
-print(match_data)
+#print(match_data)
 home_players = match_data.melt(
     id_vars=["match_api_id", "date"],
     value_vars=[f"home_player_{i}" for i in range(1, 12)],
@@ -29,89 +28,35 @@ away_players = match_data.melt(
 
 # Combine home and away players
 all_players = pd.concat([home_players, away_players], ignore_index=True).drop(columns=["home_position", "away_position"])
-print(all_players.sort_values(by = ["player_id"]))
-
-# # Fill missing player IDs with -1 and convert to integer
-# all_players["player_id"] = all_players["player_id"].fillna(-1).astype(int) #do i change this?
-
-# # Ensure all dates are in datetime64 format
-# all_players["date"] = pd.to_datetime(all_players["date"], errors="coerce")
-
-# # Sort all_players before merge_asof
-# all_players = all_players.sort_values(by=["player_id", "date"]).reset_index(drop=True)
-# print("all_players\n")
 # print(all_players)
-
-# print("playerAttributes_data\n")
 # print(playerAttributes_data)
 
+# Step 1: Determine for each player whether they have any valid aggression measurement.
+# Group by player_api_id and count non-null aggression values.
+valid_counts = playerAttributes_data.groupby("player_api_id")["aggression"].apply(lambda x: x.notnull().sum()).reset_index(name="valid_count")
+print(valid_counts)
 
+#Merge the counts back into the attributes DataFrame for ease of filtering.
+df_attributes = playerAttributes_data.merge(valid_counts, on="player_api_id", how="left")
+# print(df_attributes)
 
+players_all_null = valid_counts[valid_counts["valid_count"] == 0]["player_api_id"]
+# print()
+# print(players_all_null)
 
-# players_df = pd.merge_asof(
-#     all_players,
-#     playerAttributes_data,
-#     by="player_id",
-#     left_on="date",
-#     right_on="date",
-#     direction="backward"
-# )
-# print(players_df)
+# For these players, remove all rows from df_attributes and also remove them from df_matches.
+df_attributes_clean = df_attributes[~df_attributes["player_api_id"].isin(players_all_null)]
+df_matches_clean = all_players[~all_players["player_id"].isin(players_all_null)]
 
-# playerAttributes_data.sort_values(by = ["date"], inplace = True)
-# match_data.sort_values(by = ["date"], inplace = True)
+# Step 3: For the remaining players (those with at least one valid aggression measurement),
+# drop only the rows where aggression is null.
+df_attributes_clean = df_attributes_clean[df_attributes_clean["aggression"].notnull()]
 
-# home_players = match_data.melt(
-#     id_vars=["match_api_id", "date"],  # Columns to keep
-#     value_vars=[f"home_player_{i}" for i in range(1, 12)],  # Columns to convert
-#     var_name="home_position",  # New column name for original column names
-#     value_name="player_id"  # New column name for values (player IDs)
-# )
+# Optionally, if you don't need the 'valid_count' column anymore, drop it.
+df_attributes_clean = df_attributes_clean.drop(columns=["valid_count"])
+print(df_attributes_clean)
 
-# #print(home_players)
+df_attributes_clean.to_csv("player_attributes_clean.csv", index=False)
 
-# away_players = match_data.melt(
-#     id_vars=["match_api_id", "date"],
-#     value_vars=[f"away_player_{i}" for i in range(1, 12)],
-#     var_name="away_position",
-#     value_name="player_id"
-# )
-
-# # print()
-# # print(away_players)
-
-# #now if you put these two charts together you get a more accessible chart
-# all_players = pd.concat([home_players, away_players], ignore_index=True)
-# all_players = all_players.drop(columns = ["home_position"])
-# all_players = all_players.drop(columns = ["away_position"])
-# #all_players["date"] = pd.to_datetime(all_players["date"], errors="coerce")
-# all_players["player_id"] = all_players["player_id"].fillna(-1).astype(int)
-# all_players = all_players.sort_values(by=["player_id", "date"]).reset_index(drop=True)
-# #print(all_players)#all players is an array with all matches the date of the match and the player_id
-
-# playerAttributes_data = playerAttributes_data.rename(columns={"player_api_id": "player_id"})
-# #playerAttributes_data = playerAttributes_data.sort_values(by = ["player_id"]) #there are no null player_id's
-# #playerAttributes_data = playerAttributes_data.sort_values(by = ["aggression"]) #there are null aggression values
-# playerAttributes_data["aggression"] = playerAttributes_data["aggression"].fillna(-1)
-
-
-# # print(playerAttributes_data)
-# # print(all_players)
-# players_df = pd.merge_asof(
-#     all_players,
-#     playerAttributes_data.sort_values(by=["player_id", "date"]),
-#     by="player_id",
-#     left_on="date",
-#     right_on="date",
-#     direction="backward"
-# )
-
-# print(players_df)
-
-# #now, combine with player_attributes sorted by date also to find the closest aggression measurement to that date
-
-# # playerAttributes_data = playerAttributes_data.drop(columns = ["player_fifa_api_id"])
-# # playerAttributes_data = playerAttributes_data.reset_index(drop = True)
-# # print(playerAttributes_data)
 
 
